@@ -1,0 +1,32 @@
+#
+# Configuration file for tc-runner
+#
+global TCR
+
+# tc-runner directory
+set TCR(root)    /home/peter/src/torptest-code/tc-runner
+
+#------------------------------------------------------------------------------
+# Host alias setup. 
+#------------------------------------------------------------------------------
+set TCR(host,hostA) 10.10.1.10
+set TCR(host,hostB) 10.10.1.21
+
+#------------------------------------------------------------------------------
+# IP Addresses
+#------------------------------------------------------------------------------
+set TCR(ip,A)    10.10.1.10
+set TCR(ip,Aint) 10.0.1.6
+
+set TCR(ip,B)    10.10.1.20
+set TCR(ip,Bint) 192.168.1.11
+
+set TCR(ip,Cwan1) 10.0.1.19
+set TCR(ip,Cwan2) 10.0.2.10
+set TCR(ip,Cwan3) 10.0.3.10
+set TCR(ip,Cwan4) 10.0.4.10
+set TCR(ip,Clan1) 192.168.1.6
+set TCR(ip,Clan2) 192.168.2.6
+set TCR(ip,Clan3) 192.168.3.6
+set TCR(ip,Clan4) 192.168.4.6
+
