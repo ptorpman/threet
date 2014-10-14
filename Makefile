@@ -1,7 +1,7 @@
 #  Copyright (c) 2012  Peter R. Torpman (peter at torpman dot se)
 # 
 #  This file is part of Torpman's Test Tools 
-#      http://sourceforge.net/projects/torptest)
+#         https://github.com/ptorpman/threet
 # 
 #  Torpman's Test Tools is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
