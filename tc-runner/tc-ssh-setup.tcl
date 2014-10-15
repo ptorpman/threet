@@ -26,6 +26,12 @@ global pass
 
 log_user 0
 
+if { [llength $::argv] < 3 } {
+    puts "Usage: tc-ssh-setup.tcl <ip> <user> <pass>"
+    exit 1
+}
+
+
 set ip   [lindex $::argv 0]
 set user [lindex $::argv 1]
 set pass [lindex $::argv 2]
