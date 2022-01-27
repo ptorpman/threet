@@ -16,7 +16,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.or/licenses/>.
 # 
-include ../Makefile.inc
+include ./Makefile.inc
 
 
 SUBDIRS := conntest fstest
@@ -25,7 +25,7 @@ SUBDIRS := conntest fstest
 # MAIN TARGETS
 # ****************************************************************************/
 
-all %: 
+all clean: 
 	@for dir in $(SUBDIRS); do \
 	  $(MAKE) -C $$dir $@; \
 	done
