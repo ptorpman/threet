@@ -1,6 +1,6 @@
 #ifndef CLIENT_H__
 #define CLIENT_H__
-/* Copyright (c) 2012  Peter R. Torpman (peter at torpman dot se) 
+/* Copyright (c) 2012  Peter Torpman (peter at torpman dot se) 
  
    This file is part of Torpman's Test Tools  
    https://github.com/ptorpman/threet
@@ -37,13 +37,15 @@ extern "C" {
 /* MACROS                                                                     */
 /*============================================================================*/
 
+#define ETH_HEADER_SIZE (14 + 4)
 
 /*============================================================================*/
 /* TYPES                                                                      */
 /*============================================================================*/
 
 void client_start(char* serverIp, uint32_t serverPort,
-                  uint32_t numConn, uint32_t wantedTp, int client_id);
+                  uint32_t numConn, uint32_t wantedTp, uint32_t packetSize, 
+                  int client_id);
 void client_exit(int sig);
 
 #ifdef __cplusplus

@@ -1,6 +1,6 @@
 #ifndef CONNTEST_H__
 #define CONNTEST_H__
-/* Copyright (c) 2012  Peter R. Torpman (peter at torpman dot se) 
+/* Copyright (c) 2012  Peter Torpman (peter at torpman dot se) 
  
    This file is part of Torpman's Test Tools  
    https://github.com/ptorpman/threet
@@ -40,10 +40,13 @@ extern "C" {
 /*============================================================================*/
 
 typedef struct client_data_t {
-   struct sockaddr_in sinAddr;
-   int                sock;
-   int                clientNum;
-   pthread_t          thread;
+    int                sock;
+    int                clientNum;
+    pthread_t          thread;
+    pthread_mutex_t    mutex;
+    uint64_t           numSentSinceStart;
+    uint64_t           numSentSinceMeasure;
+    uint64_t           numConnSinceStart;
 } client_data_t;
 
 extern uint32_t gWantedTp;

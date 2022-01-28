@@ -1,4 +1,4 @@
-/* Copyright (c) 2012  Peter R. Torpman (peter at torpman dot se) 
+/* Copyright (c) 2012  Peter Torpman (peter at torpman dot se) 
  
    This file is part of Torpman's Test Tools  
    https://github.com/ptorpman/threet
@@ -32,6 +32,7 @@ debug_print(const char *format, ...)
    vfprintf(stderr, format, ap);
 
    va_end(ap);
+   fflush(stderr);
 }
 
 void
@@ -41,7 +42,6 @@ inform_user(const char *format, ...)
    
    va_start(ap, format);
 	
-   fprintf(stdout, "* ");
    vfprintf(stdout, format, ap);
    fflush(stdout);
    va_end(ap);

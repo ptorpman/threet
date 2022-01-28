@@ -40,7 +40,7 @@ per process, so we only need one client and one server.
 
    2. Start the aggregator for server side:
 
-   	  ./aggregator -n 1 -p 10000 -m 60
+   	  ./aggregator -n 1 -p 10001 -m 60
 
    3. Start the server:
 
@@ -63,7 +63,7 @@ aneed to start two servers and two clients.
 
    2. Start the aggregator for server side:
 
-   	  ./aggregator -n 2 -p 10000
+   	  ./aggregator -n 2 -p 10001
 
    3. Start the servers:
 
@@ -79,7 +79,21 @@ aneed to start two servers and two clients.
     Please, note that the 920 Mbps are now divided among the two clients so that
     they each push 460 Mbps.
 
+EXAMPLE 3:
+----------
+We want to test how much throughput we can get with different packet sizes.
 
+   1. Start the aggregator for server side:
+
+   	  ./aggregator -n 2 -p 10000
+
+   2. Start the server:
+
+      ./conntest -id 0 -s -p 7011 -t 1 -n 64 -a 10000
+
+   3. Start the client(s):
+
+      ./conntest -id 0 -c -p 7011 -t 460000 -n 64 -a 10000 -z 100
 
 
 Usage: conntest [options]
@@ -92,6 +106,7 @@ Usage: conntest [options]
   -t <kbps>   Throughput to aim for in kbps
   -l <hostip> Host name/IP address
   -p <port>   Server port number
+  -z <size>   Packet size
   -v          Display version information
   -h          Display this text
 

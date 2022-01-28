@@ -1,6 +1,6 @@
 #ifndef SERVER_H__
 #define SERVER_H__
-/* Copyright (c) 2012  Peter R. Torpman (peter at torpman dot se) 
+/* Copyright (c) 2012  Peter Torpman (peter at torpman dot se) 
  
    This file is part of Torpman's Test Tools  
    https://github.com/ptorpman/threet

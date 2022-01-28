@@ -1,5 +1,5 @@
 #/****************************************************************************
-# * Copyright (c) 2012 Peter R. Torpman.                                     *
+# * Copyright (c) 2012 Peter Torpman.                                        *
 # *                                                                          *
 # * Permission is hereby granted, free of charge, to any person obtaining a  *
 # * copy of this software and associated documentation files (the            *
@@ -30,7 +30,7 @@
 # *  Author: Peter R. Torpman (peter at torpman dot se) 2012                 *
 # ****************************************************************************/
 CC       = gcc 
-CFLAGS   = -std=gnu99 -g -O2 -Wall -Wextra -Werror -Wno-unused
+CFLAGS   = -std=gnu99 -g -Wall -Wextra -Werror -Wno-unused
 CPPFLAGS = -I. 
 LIBS     = -ldl 
 CXXFLAGS = -g -O2 -Wall -Wextra -Werror

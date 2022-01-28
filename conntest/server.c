@@ -1,4 +1,4 @@
-/* Copyright (c) 2012  Peter R. Torpman (peter at torpman dot se) 
+/* Copyright (c) 2012  Peter Torpman (peter at torpman dot se) 
  
    This file is part of Torpman's Test Tools  
    https://github.com/ptorpman/threet
@@ -42,248 +42,236 @@
 static void eternal_loop(void);
 static void* recv_thread(void* data);
 static void* tp_thread(void* data);
+static int handle_new_connection(int fd);
+static int create_new_client(int sock, int clientNum);
 
 /*============================================================================*/
 /* VARIABLES                                                                  */
 /*============================================================================*/
 static int gSocket = -1;
-static uint32_t gNumConn = -1;
-static uint32_t gNumClosed = 0;
+static uint32_t gNumClients = 0;
 static pthread_t gTpThread;
 
 static pthread_mutex_t gMutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t gMutexClosed = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t gMutexRecv = PTHREAD_MUTEX_INITIALIZER;
 static uint64_t gRecvBytes = 0;
 static uint64_t gRecvBytesSinceStart = 0;
-static uint64_t gNumConnSinceStart = 0;
 static int gClientId = 0;
 
 /*============================================================================*/
-/* FUNCTION DEFINITIONS                                                       */
+/* LOCAL FUNCTION DEFINITIONS                                                 */
 /*============================================================================*/
 
-void
-server_start(uint32_t port, uint32_t numConn, int proc_id)
+static int
+handle_new_connection(int fd)
 {
-   int res = -1;
+    /* Accept incoming connections */
+    struct sockaddr_in cliAddr;
+    uint32_t           cliLen = sizeof(struct sockaddr_in);
+    int                res;
+         
+    res = accept(fd, (struct sockaddr*) &cliAddr, &cliLen);
+         
+    if (res < 0) {
+        inform_user("ERROR: Failed to accept connection!\n");
+    }
 
-
-   gClientId = proc_id;
-   gNumConn = numConn;
-   
-   /* Open up a server socket for incoming connections */
-
-   gSocket = socket(AF_INET, SOCK_STREAM, 0);
-
-   if (gSocket < 0) {
-      inform_user("ERROR: Failed to open socket!\n");
-      return;
-   }
-
-   /* Set reusable socket */
-   int reuse = 1;
-   setsockopt(gSocket, SOL_SOCKET, SO_REUSEADDR, (char*) &reuse, sizeof(reuse));
-
-   
-   struct sockaddr_in servAddr;
-   memset(&servAddr, 0, sizeof(struct sockaddr_in));
-
-   servAddr.sin_family = AF_INET;
-   servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-   servAddr.sin_port = htons(port);
-   
-   res = bind(gSocket, (struct sockaddr*) &servAddr, sizeof(servAddr));
-   
-   if (res < 0) {
-      inform_user("ERROR: Failed to bind socket!\n");
-      return;
-   }
-
-   res = listen(gSocket, gNumConn);
-
-   if (res < 0) {
-      inform_user("ERROR: Failed to listen on socket!\n");
-      return;
-   }
-
-   inform_user("* Server socket bound to port %u\n", port);
-
-   /* Enter eternal loop */
-   eternal_loop();
+    return res;
 }
 
+static int
+create_new_client(int sock, int clientNum)
+{
+    int res;
+    client_data_t* cliData = (client_data_t*) malloc(sizeof(client_data_t));
+
+    cliData->sock      = sock;
+    cliData->clientNum = clientNum;
+         
+    return pthread_create(&cliData->thread, NULL, recv_thread, (void*) cliData);
+}
 
 static void
 eternal_loop(void)
 {
-   /* Start polling the server socket and accept incoming connections. */
+    /* Start polling the server socket and accept incoming connections. */
 
-   struct pollfd fd[1];
-   int res = 0;
-   int numConnected = 0;
+    struct pollfd fd[1];
+    int res = 0;
+    int numConnected = 0;
 
-   fd[0].fd = gSocket;
-   fd[0].events = POLLIN;
+    fd[0].fd = gSocket;
+    fd[0].events = POLLIN;
 
-   /* Start througput display thread */
-   res = pthread_create(&gTpThread, NULL, tp_thread, NULL);
+    /* Start througput display thread */
+    res = pthread_create(&gTpThread, NULL, tp_thread, NULL);
    
-   if (res < 0) {
-      inform_user("ERROR: Failed to start througput thread!\n");
-      return;
-   }
+    if (res < 0) {
+        inform_user("ERROR: Failed to start througput thread!\n");
+        return;
+    }
 
-   if (get_aggregator_port() != -1) {
-	   aggregator_register(gClientId, "127.0.0.1");
-   }
+    if (get_aggregator_port() != -1) {
+        aggregator_register(gClientId, "127.0.0.1");
+    }
    
-   while (1) {
-      res = poll(fd, 1, -1);
+    while (1) {
+        res = poll(fd, 1, -1);
 
-      if (res < 0) {
-         inform_user("ERROR: Failed to poll socket!\n");
-         return;
-      }
-
-      if (res > 0 && fd[0].revents == POLLIN) {
-         /* Accept incoming connections */
-         struct sockaddr_in cliAddr;
-         uint32_t cliLen = sizeof(struct sockaddr_in);
-         
-         res = accept(fd[0].fd, (struct sockaddr*) &cliAddr, &cliLen);
-         
-         if (res < 0) {
-            inform_user("ERROR: Failed to accept connection!\n");
+        if (res < 0) {
+            inform_user("ERROR: Failed to poll socket!\n");
             return;
-         }
+        }
 
-         pthread_mutex_lock(&gMutexRecv);
-         gNumConnSinceStart++;
-         pthread_mutex_unlock(&gMutexRecv);
-         
-         if (gWantedTp == 0) {
-            close(res);
-            continue;
-         }
-         
-         client_data_t* cliData =
-            (client_data_t*) malloc(sizeof(client_data_t));
-
-         memcpy(&cliData->sinAddr, &cliAddr, sizeof(struct sockaddr_in));
-
-         cliData->sock      = res;
-         cliData->clientNum = numConnected;
-         
-
-         if (gWantedTp != 0) {
-            /* Start client thread */
-            res = pthread_create(&cliData->thread, NULL,
-                                 recv_thread, (void*) cliData);
-            
-            if (res < 0) {
-               inform_user("ERROR: Failed to start client thread!\n");
-               return;
+        if (res > 0 && fd[0].revents == POLLIN) {
+            int cliSock = handle_new_connection(fd[0].fd);
+            if (cliSock < 0) {
+                inform_user("ERROR: Failed to accept connection!\n");
+                return;
             }
-         }
 
-         numConnected++;
-      }
+            if (create_new_client(cliSock, numConnected) != 0) {
+                inform_user("ERROR: Failed to start client thread!\n");
+                return;
+            }
 
-      if (gNumClosed == gNumConn) {
-         inform_user("* All clients closed!\n");
-         return;
-      }
-   }
+            numConnected++;
+        }
+    }
 }
 
 static void*
 recv_thread(void* data)
 {
-   client_data_t* cliData = (client_data_t*) data;
+    client_data_t* cliData = (client_data_t*) data;
 
-   inform_user("* Recv from client %d\n", cliData->clientNum);
-
-   int    res     = 0;
-   char   buff[0xFFFF];
-   size_t buffLen = 0xFFFF;
+    int    res     = 0;
+    char   buff[0xFFFF];
+    size_t buffLen = 0xFFFF;
    
-   /* Enter loop to handle data from client */
-   while (1) {
-      res = recv(cliData->sock, buff, buffLen, 0);
-
-      if (res == 0) {
-         /* Remote side has closed down... */
-         pthread_mutex_lock(&gMutex);
-         gNumClosed++;
-         pthread_mutex_unlock(&gMutex);
-         pthread_exit(cliData);
-      }
-
-      /* Update number of received bytes */
-      pthread_mutex_lock(&gMutexRecv);
-      gRecvBytes += res;
-      gRecvBytesSinceStart += res;
-      pthread_mutex_unlock(&gMutexRecv);
-   }
+    /* Enter loop to handle data from client */
+    while (1) {
+        res = recv(cliData->sock, buff, buffLen, 0);
+        
+        if (res == 0) {
+            /* Remote side has closed down... */
+            pthread_exit(cliData);
+        }
+        
+        /* Update number of received bytes */
+        pthread_mutex_lock(&gMutexRecv);
+        gRecvBytes += res;
+        gRecvBytesSinceStart += res;
+        pthread_mutex_unlock(&gMutexRecv);
+    }
    
-   pthread_exit(cliData);
+    pthread_exit(cliData);
 }
 
 
 static void*
 tp_thread(void* data)
 {
-   /* This thread is used for displaying the current throughput. */
-   uint32_t numSecs = 0;
-   uint64_t numBytes = 0;
-   uint64_t numBytesSinceStart = 0;
-   uint64_t numConnSinceStart = 0;
-   struct timeval tLoopStart;
-   struct timeval tNow;
-   uint32_t elapsed = 0;
-   double tPutNow;
-   double tPutAverage = 0;
-   double tConnAverage = 0;
-   char outPutStr[0xFFF];
+    /* This thread is used for displaying the current throughput. */
+    uint32_t numSecs = 0;
+    uint64_t numBytes = 0;
+    uint64_t numBytesSinceStart = 0;
+    struct timeval tLoopStart;
+    struct timeval tNow;
+    uint32_t elapsed = 0;
+    double tPutNow;
+    double tPutAverage = 0;
+    double tConnAverage = 0;
+    char outPutStr[0xFFF];
+    struct timeval tStart;
 
-   while (1) {
-      /* Sleep 1 second */
-      gettimeofday(&tLoopStart, NULL);
-      usleep(1000000);
+    gettimeofday(&tStart, NULL);
+    
+    while (1) {
+        /* Sleep 1 second */
+        gettimeofday(&tLoopStart, NULL);
+        usleep(1000000);
 
-      numSecs++;
-      pthread_mutex_lock(&gMutexRecv);
-      numBytes           = gRecvBytes;
-      numBytesSinceStart = gRecvBytesSinceStart;
-      numConnSinceStart  = gNumConnSinceStart;
-      gRecvBytes         = 0;   /* Reset for next calculation */
-      pthread_mutex_unlock(&gMutexRecv);
+        pthread_mutex_lock(&gMutexRecv);
+        numBytes           = gRecvBytes;
+        numBytesSinceStart = gRecvBytesSinceStart;
+        gRecvBytes         = 0;   /* Reset for next calculation */
+        pthread_mutex_unlock(&gMutexRecv);
 
-      gettimeofday(&tNow, NULL);
+        gettimeofday(&tNow, NULL);
+        numSecs = (tNow.tv_sec - tStart.tv_sec) + ((tNow.tv_usec - tStart.tv_usec) / 1000000);
 
-      /* In seconds since start of traffic */
-      elapsed = (tNow.tv_sec - tLoopStart.tv_sec) +
-         ((tNow.tv_usec - tLoopStart.tv_usec) / 1000000);
+        /* In seconds since start of traffic */
+        elapsed = (tNow.tv_sec - tLoopStart.tv_sec) + ((tNow.tv_usec - tLoopStart.tv_usec) / 1000000);
       
-      
-      /* bits per second */
-      tPutNow = (numBytes * 8) / elapsed;
+        /* bits per second */
+        tPutNow = (numBytes * 8) / elapsed;
 
-      tPutAverage = (numBytesSinceStart * 8 / 1024) / numSecs;
-      tConnAverage = (double) (numConnSinceStart / numSecs);
+        tPutAverage = (numBytesSinceStart * 8 / 1024) / numSecs;
 
-	  if (get_aggregator_port() == -1) {
-		  debug_print("Throughput @%3u s: %10.2f kbps %10.2f Mbps (Avg: %10.2f "
-					  "kbps %10.2f conn/s)\n",
-					  numSecs,
-					  (tPutNow / 1024), (tPutNow / (1024 * 1024)), tPutAverage,
-					  tConnAverage);
-	  }
-	  else {
-		  aggregator_report(gClientId, tPutNow / 1024, "127.0.0.1");
-	  }
-   }
+        if (get_aggregator_port() == -1) {
+            debug_print("Throughput @%3u s: %10.2f kbps %10.2f Mbps (Avg: %10.2f kbps)\n",
+                        numSecs,
+                        (tPutNow / 1024), (tPutNow / (1024 * 1024)), tPutAverage);
+        }
+        else {
+            aggregator_report(gClientId, tPutNow / 1024, "127.0.0.1");
+        }
+    }
 
-   pthread_exit(NULL);
+    pthread_exit(NULL);
 }
+
+/*============================================================================*/
+/* GLOBAL FUNCTION DEFINITIONS                                                */
+/*============================================================================*/
+
+void
+server_start(uint32_t port, uint32_t numConn, int proc_id)
+{
+    int res = -1;
+
+    gClientId = proc_id;
+   
+    /* Open up a server socket for incoming connections */
+
+    gSocket = socket(AF_INET, SOCK_STREAM, 0);
+
+    if (gSocket < 0) {
+        inform_user("ERROR: Failed to open socket!\n");
+        return;
+    }
+
+    /* Set reusable socket */
+    int reuse = 1;
+    setsockopt(gSocket, SOL_SOCKET, SO_REUSEADDR, (char*) &reuse, sizeof(reuse));
+
+   
+    struct sockaddr_in servAddr;
+    memset(&servAddr, 0, sizeof(struct sockaddr_in));
+
+    servAddr.sin_family = AF_INET;
+    servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    servAddr.sin_port = htons(port);
+   
+    res = bind(gSocket, (struct sockaddr*) &servAddr, sizeof(servAddr));
+   
+    if (res < 0) {
+        inform_user("ERROR: Failed to bind socket!\n");
+        return;
+    }
+
+    res = listen(gSocket, numConn);
+
+    if (res < 0) {
+        inform_user("ERROR: Failed to listen on socket!\n");
+        return;
+    }
+
+    inform_user("* Server socket bound to port %u\n", port);
+
+    /* Enter eternal loop */
+    eternal_loop();
+}
+
+
