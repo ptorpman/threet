@@ -20,6 +20,7 @@
    along with this program.  If not, see <http://www.gnu.or/licenses/>. 
 */
 #include <stdint.h>
+#include "conntest.h"
 
 
 /** This function is used to register with the aggregator */
@@ -30,8 +31,10 @@ aggregator_register(int proc_id, char* server_ip);
 int
 aggregator_report(int proc_id, uint32_t tput, char* server_ip);
 
-
-
+/** Reports statistics */
+double
+report_statistics(struct timeval* startTime, struct timeval* measurementStartTime,
+                  client_data_t** data, uint32_t numData, int id);
 
 
 

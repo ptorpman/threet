@@ -33,6 +33,7 @@ extern "C" {
 #include <pthread.h>
 #include <stdint.h>
 
+#include "conntest.h"
 /*============================================================================*/
 /* MACROS                                                                     */
 /*============================================================================*/
@@ -43,9 +44,7 @@ extern "C" {
 /* TYPES                                                                      */
 /*============================================================================*/
 
-void client_start(char* serverIp, uint32_t serverPort,
-                  uint32_t numConn, uint32_t wantedTp, uint32_t packetSize, 
-                  int client_id);
+void client_start(app_arg_t* args);
 void client_exit(int sig);
 
 #ifdef __cplusplus

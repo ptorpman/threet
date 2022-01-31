@@ -42,14 +42,30 @@ extern "C" {
 typedef struct client_data_t {
     int                sock;
     int                clientNum;
+    int                port;
     pthread_t          thread;
     pthread_mutex_t    mutex;
-    uint64_t           numSentSinceStart;
-    uint64_t           numSentSinceMeasure;
-    uint64_t           numConnSinceStart;
+    uint64_t           numSinceStart;
+    uint64_t           numSinceMeasure;
+    struct sockaddr_in serverAddress;
 } client_data_t;
 
+typedef struct app_arg_t {
+    int      useUdp;            /* Flag if UDP should be used (1) or TCP (0) */
+    int      isServer;          /* Flag if app is server (1) or client (0) */
+    uint16_t serverPort;        /* ServerPort */
+    char     serverIp[0xFF];    /* Server IP address */
+    uint32_t wantedThroughput;  /* Requested throughput */
+    int      numConnections;    /* Number of connections */
+    int      aggregatorPort;    /* Port of Aggregator */
+    uint16_t packetSize;        /* Packet size */
+    uint16_t usedPacketSize;    /* Packet size used */
+    int      processId;         /* Process ID */
+} app_arg_t;
+
+
 extern uint32_t gWantedTp;
+
 
 
 int get_aggregator_port(void);

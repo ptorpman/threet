@@ -18,6 +18,7 @@
 */
 #include "common.h"
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -110,5 +111,51 @@ send_msg_to_aggregator(uint8_t* msg, int msgLen, char* server_ip)
     return res;
 }
 
+double
+report_statistics(struct timeval* startTime, struct timeval* measurementStartTime, 
+                  client_data_t** data, uint32_t numData, int id)
+{
+    uint64_t numBytes = 0;
+    uint64_t numBytesSinceStart = 0;
+    uint32_t elapsed = 0;
+    double bitsPerSecNow;
+    double bitsPerSecAverage = 0;
+    
+    for (uint32_t i = 0; i < numData; i++) {
+        if (data[i] == NULL || data[i]->sock == 0) {
+            /* Not operational yet */
+            continue;
+        }
 
+        pthread_mutex_lock(&data[i]->mutex);
+        numBytes += data[i]->numSinceMeasure;
+        data[i]->numSinceMeasure = 0;
+        numBytesSinceStart += data[i]->numSinceStart;
+        pthread_mutex_unlock(&data[i]->mutex);
+    }
+
+    struct timeval timeNow;
+    gettimeofday(&timeNow, NULL);
+    uint32_t numSecs = (timeNow.tv_sec - startTime->tv_sec) + 
+        ((timeNow.tv_usec - startTime->tv_usec) / 1000000);
+
+    /* In seconds since start of traffic */
+    elapsed = (timeNow.tv_sec - measurementStartTime->tv_sec) + 
+        ((timeNow.tv_usec - measurementStartTime->tv_usec) / 1000000);
+
+    bitsPerSecNow = (numBytes * 8) / elapsed;
+    bitsPerSecAverage = (numBytesSinceStart * 8 / 1024) / numSecs;
+    
+    if (get_aggregator_port () != 0) {
+        aggregator_report(id, bitsPerSecNow / 1024, "127.0.0.1");
+    }
+    else {
+        inform_user("Throughput @%3u s: %10.2f kbps %10.2f Mbps (Avg: %10.2f Mbps)\n",
+                    numSecs, (bitsPerSecNow / 1024),
+                    (bitsPerSecNow / (1024 * 1024)), bitsPerSecAverage / 1024);
+    }
+
+
+    return bitsPerSecNow;
+}
 

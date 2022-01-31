@@ -24,25 +24,25 @@
 void
 debug_print(const char *format, ...)
 {
-	va_list ap;
+    va_list ap;
     
-   va_start(ap, format);
-	
-   fprintf(stderr, "*** ");
-   vfprintf(stderr, format, ap);
+    va_start(ap, format);
+    
+    fprintf(stderr, "*** ");
+    vfprintf(stderr, format, ap);
 
-   va_end(ap);
-   fflush(stderr);
+    va_end(ap);
+    fflush(stderr);
 }
 
 void
 inform_user(const char *format, ...)
 {
-	va_list ap;
+    va_list ap;
    
-   va_start(ap, format);
-	
-   vfprintf(stdout, format, ap);
-   fflush(stdout);
-   va_end(ap);
+    va_start(ap, format);
+    
+    vfprintf(stdout, format, ap);
+    fflush(stdout);
+    va_end(ap);
 }

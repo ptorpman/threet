@@ -2,11 +2,11 @@
 
 (defun emacs-format-function ()
    "Format the whole buffer."
-   (c-set-style "ellemtel")
+   (c-set-style "linux")
    (setq indent-tabs-mode nil)
    (setq tab-width 4)
    (setq c-basic-offset 4)
-   (indent-region (point-min) (point-max) nil)
    (untabify (point-min) (point-max))
+   (indent-region (point-min) (point-max) nil)
    (save-buffer)
 )

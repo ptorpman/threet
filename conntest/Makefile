@@ -24,7 +24,6 @@ include ../Makefile.inc
 RESULT := conntest
 RESULT2 := aggregator
 
-
 SRC  := conntest.c server.c client.c common.c debug.c
 SRC2 := aggregator.c debug.c
 
@@ -45,26 +44,19 @@ CFLAGS += -DDEBUG -g
 all: $(RESULT2) $(RESULT) 
 
 $(RESULT): $(OBJ) $(OBJ_CC) $(HEADERS)
-	@echo "[LD] $@" ; $(CC) -rdynamic $(OBJ) $(OBJ_CC) -o $@ $(LIBS) 
+	$(CC) -rdynamic $(OBJ) $(OBJ_CC) -o $@ $(LIBS) 
 
 $(RESULT2): $(OBJ2) $(HEADERS)
-	@echo "[LD] $@" ; $(CC) -rdynamic $(OBJ2) -o $@ $(LIBS) 
-
-
-
-# ****************************************************************************/
-
-
-
+	$(CC) -rdynamic $(OBJ2) -o $@ $(LIBS) 
 
 # ****************************************************************************/
 # DEFAULT TARGETS 
 # ****************************************************************************/
 %.o: %.c
-	@echo "[CC] $^" ; $(CC) -fPIC $(CFLAGS) $(CPPFLAGS) -c $^
+	$(CC) -fPIC $(CFLAGS) $(CPPFLAGS) -c $^
 
 %.o: %.cc
-	@echo "[C++] $^" ; $(CXX) -fPIC $(CXXFLAGS) $(CPPFLAGS) -c $^
+	$(CXX) -fPIC $(CXXFLAGS) $(CPPFLAGS) -c $^
 
 clean: 
 	-rm *.o *.so $(RESULT) *~

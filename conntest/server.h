@@ -32,6 +32,8 @@ extern "C" {
 #include <stdlib.h>
 #include <pthread.h>
 #include <stdint.h>
+
+#include "conntest.h"
 /*============================================================================*/
 /* MACROS                                                                     */
 /*============================================================================*/
@@ -41,9 +43,7 @@ extern "C" {
 /* TYPES                                                                      */
 /*============================================================================*/
 
-
-void server_start(uint32_t port, uint32_t numConn, int proc_id);
-
+void server_start(app_arg_t* args);
 
 #ifdef __cplusplus
 }

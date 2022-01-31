@@ -30,7 +30,7 @@
 # *  Author: Peter R. Torpman (peter at torpman dot se) 2012                 *
 # ****************************************************************************/
 CC       = gcc 
-CFLAGS   = -std=gnu99 -g -Wall -Wextra -Werror -Wno-unused
+CFLAGS   = -std=gnu99 -Wall -Wextra -Werror -Wno-unused
 CPPFLAGS = -I. 
 LIBS     = -ldl 
 CXXFLAGS = -g -O2 -Wall -Wextra -Werror
