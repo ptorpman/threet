@@ -351,7 +351,7 @@ void client_start(app_arg_t* args)
         return;
     }
 
-    if (get_aggregator_port() != -1) {
+    if (get_aggregator_port() != 0) {
         aggregator_register(gAppArgs->processId, "127.0.0.1");
     }
 
