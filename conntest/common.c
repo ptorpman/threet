@@ -118,7 +118,7 @@ report_statistics(struct timeval* startTime, struct timeval* measurementStartTim
     uint64_t numBytes = 0;
     uint64_t numBytesSinceStart = 0;
     uint32_t elapsed = 0;
-    double bitsPerSecNow;
+    double bitsPerSecNow = 0;
     double bitsPerSecAverage = 0;
     
     for (uint32_t i = 0; i < numData; i++) {

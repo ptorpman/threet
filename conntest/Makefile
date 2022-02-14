@@ -24,7 +24,7 @@ include ../Makefile.inc
 RESULT := conntest
 RESULT2 := aggregator
 
-SRC  := conntest.c server.c client.c common.c debug.c
+SRC  := conntest.c server.c server_tcp.c server_udp.c client.c common.c debug.c
 SRC2 := aggregator.c debug.c
 
 SRC_CC :=	

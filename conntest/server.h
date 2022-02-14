@@ -44,6 +44,16 @@ extern "C" {
 /*============================================================================*/
 
 void server_start(app_arg_t* args);
+int server_create_and_bind_socket(int port, int proto);
+
+void server_add(client_data_t* data);
+void server_remove(client_data_t* data);
+
+int tcp_create_server(client_data_t** servers, uint32_t basePort, uint32_t numConn);
+int tcp_handle_new_connection(void);
+
+int udp_create_servers(client_data_t** servers, uint32_t basePort, uint32_t numPorts);
+
 
 #ifdef __cplusplus
 }

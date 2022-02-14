@@ -45,10 +45,8 @@ static void* tp_thread(void* data);
 
 static int check_and_handle_new_connection(int sock);
 static int handle_new_connection(int fd);
-static int create_client_receiver(int sock, int clientNum);
 static int create_server_tcp_socket(uint32_t port, uint32_t numConn);
 static int create_and_bind_socket(int port, int proto);
-static int create_udp_servers(uint32_t basePort, uint32_t numPorts);
 static int create_tcp_server(uint32_t port, uint32_t numConn);
 
 /*============================================================================*/
@@ -57,79 +55,17 @@ static int create_tcp_server(uint32_t port, uint32_t numConn);
 static app_arg_t* gAppArgs = NULL;
 static client_data_t* gServers[0xFFFF];
 
-static int gSocket = -1;
 static pthread_t gTpThread;
 static pthread_mutex_t gMutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t gMutexRecv = PTHREAD_MUTEX_INITIALIZER;
 static uint64_t gRecvBytes = 0;
 static uint64_t gRecvBytesSinceStart = 0;
 
+static int gAdded = 0;
+
 /*============================================================================*/
 /* LOCAL FUNCTION DEFINITIONS */
 /*============================================================================*/
-
-static int
-handle_new_connection(int fd)
-{
-    /* Accept incoming connections */
-    struct sockaddr_in cliAddr;
-    uint32_t cliLen = sizeof(struct sockaddr_in);
-    int res;
-
-    res = accept(fd, (struct sockaddr*)&cliAddr, &cliLen);
-
-    if (res < 0) {
-        inform_user("ERROR: Failed to accept connection!\n");
-    }
-
-    return res;
-}
-
-static int
-create_client_receiver(int sock, int clientNum)
-{
-    int res;
-    client_data_t* cliData = (client_data_t*)malloc(sizeof(client_data_t));
-
-    cliData->sock = sock;
-    cliData->clientNum = clientNum;
-    pthread_mutex_init(&cliData->mutex, NULL);
-
-    return pthread_create(&cliData->thread, NULL, recv_thread, (void*)cliData);
-}
-
-static int
-check_and_handle_new_connection(int sock)
-{
-    struct pollfd fd[1];
-    int numConnected = 0;
-
-    fd[0].fd = gSocket;
-    fd[0].events = POLLIN;
-
-    int res = poll(fd, 1, 10);
-
-    if (res < 0) {
-        return 0;
-    }
-
-    if (res > 0 && fd[0].revents == POLLIN) {
-        int cliSock = handle_new_connection(fd[0].fd);
-        if (cliSock < 0) {
-            inform_user("ERROR: Failed to accept connection!\n");
-            return -1;
-        }
-
-        if (create_client_receiver(cliSock, numConnected) != 0) {
-            inform_user("ERROR: Failed to start client thread!\n");
-            return -1;
-        }
-
-        numConnected++;
-    }
-
-    return 0;
-}
 
 static void
 eternal_loop(void)
@@ -148,9 +84,10 @@ eternal_loop(void)
 
     while (1) {
         if (!gAppArgs->useUdp) {
-            if (check_and_handle_new_connection(gSocket) < 0) {
+            if (tcp_handle_new_connection() < 0) {
                 return;
-            } else {
+            }
+            else {
             }
         } else {
             usleep(10000);
@@ -217,8 +154,37 @@ tp_thread(void* data)
     pthread_exit(NULL);
 }
 
-static int
-create_and_bind_socket(int port, int proto)
+/*============================================================================*/
+/* GLOBAL FUNCTION DEFINITIONS */
+/*============================================================================*/
+
+void server_start(app_arg_t* args)
+{
+    for(int i = 0; i < 0xFFFF; i++) {
+        gServers[i] = NULL;
+    }
+
+    gAppArgs = args;
+    int res = -1;
+
+    if (!args->useUdp) {
+        if (tcp_create_server(gServers, args->serverPort, args->numConnections) < 0) {
+            inform_user("ERROR: Failed to open TCP server socket!\n");
+            return;
+        }
+    } else {
+        if (udp_create_servers(gServers, args->serverPort, args->numConnections) < 0) {
+            inform_user("ERROR: Failed to create UDP servers!\n");
+        }
+    }
+
+    /* Enter eternal loop */
+    eternal_loop();
+}
+
+
+int
+server_create_and_bind_socket(int port, int proto)
 {
     int sock = 0;
 
@@ -254,92 +220,20 @@ create_and_bind_socket(int port, int proto)
     return sock;
 }
 
-static int
-create_server_tcp_socket(uint32_t port, uint32_t numConn)
+void
+server_add(client_data_t* data)
 {
-    gSocket = create_and_bind_socket(port, SOCK_STREAM);
-
-    if (gSocket < 0) {
-        inform_user("ERROR: Failed to open socket!\n");
-        return -1;
-    }
-
-    int res = listen(gSocket, numConn);
-
-    if (res < 0) {
-        inform_user("ERROR: Failed to listen on socket!\n");
-        return res;
-    }
-
-    inform_user("* Server socket bound to port %u\n", port);
-    return 0;
+    gServers[++gAdded] = data;
 }
 
-static int
-create_tcp_server(uint32_t port, uint32_t numConn)
+void
+server_remove(client_data_t* data)
 {
-    gServers[0] = (client_data_t*)malloc(sizeof(client_data_t));
-    memset(gServers[0], 0, sizeof(client_data_t));
-
-    gServers[0]->sock = create_server_tcp_socket(port, numConn);
-
-    if (gServers[0]->sock < 0) {
-        return -1;
-    }
-
-    return 0;
-}
-
-static int
-create_udp_servers(uint32_t basePort, uint32_t numPorts)
-{
-    for (uint32_t i = 0; i < numPorts; i++) {
-        gServers[i] = (client_data_t*)malloc(sizeof(client_data_t));
-        memset(gServers[i], 0, sizeof(client_data_t));
-
-        gServers[i]->clientNum = i;
-
-        pthread_mutex_init(&gServers[i]->mutex, NULL);
-
-        gServers[i]->port = basePort + i;
-        gServers[i]->sock = create_and_bind_socket(gServers[i]->port, SOCK_DGRAM);
-
-        if (gServers[i]->sock < 0)
-        {
-            return -1;
-        }
-
-        gServers[i]->numSinceStart = 0;
-        gServers[i]->numSinceMeasure = 0;
-
-        if (pthread_create(&gServers[i]->thread, NULL, recv_thread, (void*)gServers[i]) < 0) {
-            return -1;
-        }
-    }
-
-    return 0;
-}
-
-/*============================================================================*/
-/* GLOBAL FUNCTION DEFINITIONS */
-/*============================================================================*/
-
-void server_start(app_arg_t* args)
-{
-    gAppArgs = args;
-    int res = -1;
-
-    if (!args->useUdp) {
-        if (create_tcp_server(args->serverPort, args->numConnections) < 0) {
-            inform_user("ERROR: Failed to open TCP server socket!\n");
+    for(int i = 0; i < 0xFFFF; i++) {
+        if (gServers[i] == data) {
+            gServers[i] = NULL;
             return;
         }
-    } else {
-        if (create_udp_servers(args->serverPort, args->numConnections) < 0) {
-            inform_user("ERROR: Failed to create UDP servers!\n");
-        }
     }
-
-    /* Enter eternal loop */
-    eternal_loop();
 }
+
