@@ -25,7 +25,7 @@ RESULT := conntest
 RESULT2 := aggregator
 
 SRC  := conntest.c server.c server_tcp.c server_udp.c client.c common.c debug.c
-SRC2 := aggregator.c debug.c
+SRC2 := debug.c aggregator.c 
 
 SRC_CC :=	
 
@@ -33,21 +33,23 @@ OBJ   := $(SRC:.c=.o)
 OBJ2   := $(SRC2:.c=.o)
 OBJ_CC := $(SRC_CC:.cc=.o)
 
-LIBS += -lpthread
+
+ifneq ($(plf), qnx)
+  LIBS += -lpthread
+endif
 
 CFLAGS += -DDEBUG -g
 
 # ****************************************************************************/
 # MAIN TARGETS
 # ****************************************************************************/
-
 all: $(RESULT2) $(RESULT) 
 
 $(RESULT): $(OBJ) $(OBJ_CC) $(HEADERS)
-	$(CC) -rdynamic $(OBJ) $(OBJ_CC) -o $@ $(LIBS) 
+	$(CC) $(OBJ) $(OBJ_CC) $(LDFLAGS) $(LIBS)  -o $@ 
 
 $(RESULT2): $(OBJ2) $(HEADERS)
-	$(CC) -rdynamic $(OBJ2) -o $@ $(LIBS) 
+	$(CC) $(OBJ2) $(OBJ_CC) $(LDFLAGS) $(LIBS)  -o $@ 
 
 # ****************************************************************************/
 # DEFAULT TARGETS 
@@ -59,4 +61,4 @@ $(RESULT2): $(OBJ2) $(HEADERS)
 	$(CXX) -fPIC $(CXXFLAGS) $(CPPFLAGS) -c $^
 
 clean: 
-	-rm *.o *.so $(RESULT) *~
+	-rm *.o *.so $(RESULT) $(RESULT2) *~

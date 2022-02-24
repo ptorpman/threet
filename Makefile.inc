@@ -27,12 +27,40 @@
 # ****************************************************************************/
 #
 #/****************************************************************************
-# *  Author: Peter R. Torpman (peter at torpman dot se) 2012                 *
+# *  Author: Peter    Torpman (peter at torpman dot se) 2012                 *
 # ****************************************************************************/
-CC       = gcc 
-CFLAGS   = -std=gnu99 -Wall -Wextra -Werror -Wno-unused
-CPPFLAGS = -I. 
-LIBS     = -ldl 
+
+CFLAGS = -std=gnu99 -Wall -Wextra -Werror -Wno-unused
+LIBS =
+
+ifeq ($(plf),)
+  CC = gcc
+  LD = ld
+  CPPFLAGS = -I. 
+endif
+
+ifeq ($(plf), nvidia)
+  CC = aarch64-linux-gnu-gcc
+  LD = aarch64-linux-gnu-ld
+  LDFLAGS = --entry main
+  LIBS = -lc
+endif
+
+ifeq ($(plf), qnx)
+  QNX_VER = $(word 2, $(shell $(QNX_HOST)/usr/bin/qconfig -i | grep "version: "))
+
+  QNX_ARCH=aarch64le
+
+  CC = $(QNX_HOST)/usr/bin/aarch64-unknown-nto-qnx$(QNX_VER)-gcc
+  LD = $(QNX_HOST)/usr/bin/aarch64-unknown-nto-qnx$(QNX_VER)-ld
+
+  CFLAGS += -B$(QNX_HOST)/usr/bin
+  LDFLAGS +=  -L$(QNX_TARGET)/$(QNX_ARCH)/lib  
+  CPPFLAGS += -I$(QNX_TARGET)/qnx7/usr/include -DQNX
+
+  LIBS = -Bdynamic -lsocket 
+endif
+
 CXXFLAGS = -g -O2 -Wall -Wextra -Werror
 
 INSTALL_DIR   =  install -d -m

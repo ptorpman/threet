@@ -22,6 +22,9 @@
 #include <stdint.h>
 #include "conntest.h"
 
+#ifdef QNX
+#include <sys/time.h>
+#endif
 
 /** This function is used to register with the aggregator */
 int
