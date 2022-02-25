@@ -1,4 +1,4 @@
-/* Copyright (c) 2012  Peter R. Torpman (peter at torpman dot se) 
+/* Copyright (c) 2012  Peter Torpman (peter at torpman dot se) 
  
    This file is part of Torpman's Test Tools  
    https://github.com/ptorpman/threet
@@ -48,7 +48,7 @@ fs_testtype_t gTestType  = TEST_TYPE_READ;
 uint32_t      gFileSize  = 1024; /* File size to use */
 uint32_t      gDuration  = 10;  /* Duration in seconds */
 uint32_t      gBlockSize = 1;   /* Read/Write block size */
-char          gTestFile[0xFF];  /* Test file name */
+char          gTestFile[1024];  /* Test file name */
 
 
 /*============================================================================*/
@@ -212,7 +212,7 @@ print_version(void)
 {
     fprintf(stderr,
             "fstest (Torpman's Test Tools) 0.1\n"
-            "Copyright (C) 2012 Peter R. Torpman (peter@torpman.se)\n"
+            "Copyright (C) 2012 Peter Torpman (peter@torpman.se)\n"
             "This is free software.  \nYou may redistribute copies of it under "
             "the terms of the GNU General Public License \n"
             "<http://www.gnu.org/licenses/gpl.html>.\n"
@@ -264,7 +264,7 @@ static void
 run_read_test(void)
 {
   /* First, create a file with the correct size. */
-  char cmd[0xFF];
+  char cmd[2048];
 
   sprintf(cmd, "dd if=/dev/zero of=%s bs=%u count=1", gTestFile, gFileSize);
    

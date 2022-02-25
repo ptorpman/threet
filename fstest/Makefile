@@ -1,4 +1,4 @@
-#  Copyright (c) 2012  Peter R. Torpman (peter at torpman dot se)
+#  Copyright (c) 2012  Peter Torpman (peter at torpman dot se)
 # 
 #  This file is part of Torpman's Test Tools 
 #         https://github.com/ptorpman/threet
@@ -8,7 +8,7 @@
 #  the Free Software Foundation; either version 3 of the License, or
 #  (at your option) any later version.
 # 
-#  CompFrameTorpman's Test Tools is distributed in the hope that it will 
+#  Torpman's Test Tools is distributed in the hope that it will 
 #  be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
@@ -55,4 +55,4 @@ $(RESULT): $(OBJ) $(OBJ_CC) $(HEADERS)
 	@echo "[C++] $^" ; $(CXX) -fPIC $(CXXFLAGS) $(CPPFLAGS) -c $^
 
 clean: 
-	-rm *.o *.so $(RESULT) *~
+	@echo "[CLEAN] $^" ; rm -f *.o *.so $(RESULT) *~

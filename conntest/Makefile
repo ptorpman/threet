@@ -8,7 +8,7 @@
 #  the Free Software Foundation; either version 3 of the License, or
 #  (at your option) any later version.
 # 
-#  CompFrameTorpman's Test Tools is distributed in the hope that it will 
+#  Torpman's Test Tools is distributed in the hope that it will 
 #  be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
@@ -46,19 +46,19 @@ CFLAGS += -DDEBUG -g
 all: $(RESULT2) $(RESULT) 
 
 $(RESULT): $(OBJ) $(OBJ_CC) $(HEADERS)
-	$(CC) $(OBJ) $(OBJ_CC) $(LDFLAGS) $(LIBS)  -o $@ 
+	@echo "[LD] $^" ; $(CC) $(OBJ) $(OBJ_CC) $(LDFLAGS) $(LIBS)  -o $@ 
 
 $(RESULT2): $(OBJ2) $(HEADERS)
-	$(CC) $(OBJ2) $(OBJ_CC) $(LDFLAGS) $(LIBS)  -o $@ 
+	@echo "[LD] $^" ; $(CC) $(OBJ2) $(OBJ_CC) $(LDFLAGS) $(LIBS)  -o $@ 
 
 # ****************************************************************************/
 # DEFAULT TARGETS 
 # ****************************************************************************/
 %.o: %.c
-	$(CC) -fPIC $(CFLAGS) $(CPPFLAGS) -c $^
+	@echo "[CC] $^" ; $(CC) -fPIC $(CFLAGS) $(CPPFLAGS) -c $^
 
 %.o: %.cc
-	$(CXX) -fPIC $(CXXFLAGS) $(CPPFLAGS) -c $^
+	@echo "[CC] $^" ; $(CXX) -fPIC $(CXXFLAGS) $(CPPFLAGS) -c $^
 
 clean: 
-	-rm *.o *.so $(RESULT) $(RESULT2) *~
+	@echo "[CLEAN] $^" ; rm -f *.o *.so $(RESULT) $(RESULT2) *~

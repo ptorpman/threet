@@ -8,7 +8,7 @@
 #     # #    # #   ## #   ##    #    #      #    #   #   
  #####   ####  #    # #    #    #    ######  ####    #   
 
-           (c) 2012 Peter R. Torpman (peter at torpman dot se)
+           (c) 2012 Peter Torpman (peter at torpman dot se)
 ================================================================================
 
 This program is used for testing thoughput over a number of concurrent TCP connections. 
